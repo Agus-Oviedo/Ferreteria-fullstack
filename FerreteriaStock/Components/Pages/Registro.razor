@@ -1,0 +1,110 @@
+﻿@page "/registro"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject UsuarioService UsuarioService
+@inject NavigationManager Nav
+
+<div class="d-flex justify-content-center align-items-center vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+    <div class="card shadow-lg p-4" style="width: 400px; border-radius: 15px;">
+        <div class="text-center">
+            <i class="bi bi-person-plus-fill" style="font-size: 4rem; color: #0d47a1;"></i>
+            <h4 class="mt-2">Crear cuenta</h4>
+        </div>
+
+        <EditForm Model="@nuevoUsuario" OnValidSubmit="RegistrarUsuario">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Nombre -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <InputText @bind-Value="nuevoUsuario.Nombre" placeholder="Nombre completo" class="form-control" />
+            </div>
+
+            <!-- UsuarioAcceso -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                <InputText @bind-Value="nuevoUsuario.UsuarioAcceso" placeholder="Nombre de usuario" class="form-control" />
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <InputText @bind-Value="nuevoUsuario.Email" type="email" placeholder="Email" class="form-control" />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <InputText @bind-Value="nuevoUsuario.Clave" type="password" placeholder="Contraseña" class="form-control" />
+            </div>
+
+
+
+            <!-- Botones -->
+            <button type="submit" class="btn btn-primary w-100 mb-2" disabled="@isLoading">
+                @(isLoading ? "Creando cuenta..." : "Registrarse")
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" @onclick="IrALogin">
+                Volver a login
+            </button>
+        </EditForm>
+
+        <!-- Mensaje de éxito -->
+        @if (!string.IsNullOrEmpty(mensajeExito))
+        {
+            <div class="alert alert-info text-center mt-3">@mensajeExito</div>
+        }
+
+        <!-- Mensaje de error -->
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger text-center mt-3">@mensajeError</div>
+        }
+    </div>
+</div>
+
+@code {
+    private Usuario nuevoUsuario = new()
+    {
+        Rol = "Empleado"
+    };
+
+    private string mensajeExito = "";
+    private string mensajeError = "";
+    private bool isLoading = false;
+
+    private async Task RegistrarUsuario()
+    {
+        isLoading = true;
+        mensajeExito = "";
+        mensajeError = "";
+
+        try
+        {
+            await UsuarioService.AgregarAsync(nuevoUsuario);
+
+            mensajeExito = "✅ Cuenta creada con éxito. Redirigiendo al login...";
+            await Task.Delay(1500);
+
+            Nav.NavigateTo("/login");
+        }
+        catch (HttpRequestException httpEx)
+        {
+            // Mostrar SOLO el mensaje que viene desde la API
+            mensajeError = $"❌ {httpEx.Message}";
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"❌ Error inesperado: {ex.Message}";
+        }
+
+        isLoading = false;
+    }
+
+    private void IrALogin()
+    {
+        Nav.NavigateTo("/login");
+    }
+}

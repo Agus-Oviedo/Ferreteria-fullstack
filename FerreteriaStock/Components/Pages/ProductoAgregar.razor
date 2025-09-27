@@ -1,0 +1,101 @@
+﻿@page "/productos/agregar"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject ProductoService ProductoService
+@inject NavigationManager Nav
+
+<div class="d-flex justify-content-center align-items-center vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+    <div class="card shadow-lg p-4" style="width: 450px; border-radius: 15px;">
+        <div class="text-center">
+            <i class="bi bi-box-seam" style="font-size: 4rem; color: #0d47a1;"></i>
+            <h4 class="mt-2">Agregar Producto</h4>
+        </div>
+
+        <EditForm Model="@nuevoProducto" OnValidSubmit="GuardarProducto">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Nombre -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                <InputText @bind-Value="nuevoProducto.Nombre" placeholder="Nombre del producto" class="form-control" />
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                <InputText @bind-Value="nuevoProducto.Descripcion" placeholder="Descripción" class="form-control" />
+            </div>
+
+            <!-- Imagen -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-image"></i></span>
+                <InputText @bind-Value="nuevoProducto.Imagen" placeholder="URL de imagen" class="form-control" />
+            </div>
+
+            <!-- Precio -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                <InputNumber @bind-Value="nuevoProducto.Precio" class="form-control" placeholder="Precio" />
+            </div>
+
+            <!-- Stock -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                <InputNumber @bind-Value="nuevoProducto.Stock" class="form-control" placeholder="Stock" />
+            </div>
+
+            <!-- Botones -->
+            <button type="submit" class="btn btn-primary w-100 mb-2" disabled="@isLoading">
+                @(isLoading ? "Guardando..." : "💾 Guardar")
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" @onclick="Volver">
+                Volver
+            </button>
+        </EditForm>
+
+        <!-- Mensajes -->
+        @if (!string.IsNullOrEmpty(mensajeExito))
+        {
+            <div class="alert alert-success text-center mt-3">@mensajeExito</div>
+        }
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <div class="alert alert-danger text-center mt-3">@mensajeError</div>
+        }
+    </div>
+</div>
+
+@code {
+    private Producto nuevoProducto = new();
+    private string mensajeExito = "";
+    private string mensajeError = "";
+    private bool isLoading = false;
+
+    private async Task GuardarProducto()
+    {
+        isLoading = true;
+        mensajeExito = "";
+        mensajeError = "";
+
+        try
+        {
+            await ProductoService.AddProductoAsync(nuevoProducto);
+            mensajeExito = "✅ Producto agregado con éxito. Redirigiendo...";
+            await Task.Delay(1500);
+            Nav.NavigateTo("/productos");
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"❌ Error: {ex.Message}";
+        }
+
+        isLoading = false;
+    }
+
+    private void Volver()
+    {
+        Nav.NavigateTo("/productos");
+    }
+}

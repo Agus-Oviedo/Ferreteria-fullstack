@@ -1,0 +1,104 @@
+﻿@page "/productos/editar/{id:int}"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject ProductoService ProductoService
+@inject NavigationManager Nav
+
+<div class="d-flex justify-content-center align-items-center vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+    <div class="card shadow-lg p-4" style="width: 450px; border-radius: 15px;">
+        <h4 class="text-center mb-4">✏️ Editar Producto</h4>
+
+        @if (producto == null)
+        {
+            <p class="text-center text-muted">Cargando producto...</p>
+        }
+        else
+        {
+            <EditForm Model="@producto" OnValidSubmit="GuardarProducto">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <InputText class="form-control" @bind-Value="producto.Nombre" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <InputText class="form-control" @bind-Value="producto.Descripcion" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Imagen (URL)</label>
+                    <InputText class="form-control" @bind-Value="producto.Imagen" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Precio</label>
+                    <InputNumber class="form-control" @bind-Value="producto.Precio" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Stock</label>
+                    <InputNumber class="form-control" @bind-Value="producto.Stock" />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-2">
+                    💾 Guardar Cambios
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" @onclick="Cancelar">
+                    ⬅️ Volver
+                </button>
+            </EditForm>
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Producto? producto;
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            producto = await ProductoService.GetProductoByIdAsync(id);
+            if (producto == null)
+            {
+                errorMessage = "❌ Producto no encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al cargar el producto: {ex.Message}";
+        }
+    }
+
+    private async Task GuardarProducto()
+    {
+        try
+        {
+            if (producto != null)
+            {
+                await ProductoService.UpdateProductoAsync(producto);
+                Nav.NavigateTo("/productos");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al guardar: {ex.Message}";
+        }
+    }
+
+    private void Cancelar()
+    {
+        Nav.NavigateTo("/productos");
+    }
+}

@@ -1,0 +1,99 @@
+﻿@page "/usuarios/agregar"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject UsuarioService UsuarioService
+@inject NavigationManager Nav
+
+<div class="d-flex justify-content-center align-items-center min-vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+    <div class="card shadow-lg p-4" style="width: 500px; border-radius: 15px;">
+        <h3 class="text-center mb-4">
+            <i class="bi bi-person-plus"></i> Agregar Usuario
+        </h3>
+
+        <EditForm Model="@usuario" OnValidSubmit="CrearUsuario">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Nombre -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <InputText @bind-Value="usuario.Nombre" placeholder="Nombre completo" class="form-control" />
+            </div>
+
+            <!-- Usuario de acceso -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                <InputText @bind-Value="usuario.UsuarioAcceso" placeholder="Usuario de acceso" class="form-control" />
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <InputText @bind-Value="usuario.Email" placeholder="Email" class="form-control" />
+            </div>
+
+            <!-- Clave -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <InputText @bind-Value="usuario.Clave" type="password" placeholder="Contraseña" class="form-control" />
+            </div>
+
+            <!-- Rol -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                <InputSelect @bind-Value="usuario.Rol" class="form-control">
+                    <option value="usuario">Usuario</option>
+                    <option value="admin">Administrador</option>
+                </InputSelect>
+            </div>
+
+            <!-- Botones -->
+            <button type="submit" class="btn btn-primary w-100 mb-2" disabled="@isLoading">
+                @(isLoading ? "Guardando..." : "Crear Usuario")
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" @onclick="Volver">
+                Cancelar
+            </button>
+        </EditForm>
+
+        <!-- Error -->
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="text-danger text-center mt-3">@errorMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    private Usuario usuario = new();
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    private async Task CrearUsuario()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+
+            await UsuarioService.AgregarAsync(usuario);
+
+            // Redirige a la lista de usuarios
+            Nav.NavigateTo("/usuarios");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al crear usuario: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Volver()
+    {
+        Nav.NavigateTo("/usuarios");
+    }
+}

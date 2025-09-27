@@ -1,0 +1,23 @@
+﻿@page "/home"
+@inject NavigationManager Nav
+
+<!-- Fondo degradado y card centrada -->
+<div class="d-flex justify-content-center align-items-center vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+
+    <div class="card shadow-lg p-4 text-center" style="width: 380px; border-radius: 15px;">
+        <!-- Icono -->
+        <i class="bi bi-house-door" style="font-size: 4rem; color: #0d47a1;"></i>
+        <h4 class="mt-2">Bienvenido</h4>
+        <p class="text-muted">Selecciona una opción para continuar</p>
+
+        <!-- Botones -->
+        <button class="btn btn-primary w-100 mb-2" @onclick='() => Nav.NavigateTo("/productosvista")'>
+            <i class="bi bi-box-seam"></i> Ir a Productos
+        </button>
+
+        <button class="btn btn-outline-secondary w-100" @onclick='() => Nav.NavigateTo("/usuarios")'>
+            <i class="bi bi-people"></i> Ir a Usuarios
+        </button>
+    </div>
+</div>

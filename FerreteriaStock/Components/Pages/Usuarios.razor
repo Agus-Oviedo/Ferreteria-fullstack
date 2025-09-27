@@ -1,0 +1,181 @@
+﻿@page "/usuarios"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject UsuarioService UsuarioService
+@inject NavigationManager Nav
+@inject SesionUsuario Sesion
+
+<div class="d-flex flex-column align-items-center min-vh-100 w-100 h-auto overflow-auto"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c); padding: 20px;">
+
+    @if (!Sesion.EstaLogueado || Sesion.UsuarioActual?.Rol?.ToLower() != "admin")
+    {
+        <div class="card shadow-lg p-4 text-center" style="max-width: 600px; border-radius: 15px;">
+            <h3 class="text-danger"><i class="bi bi-shield-lock"></i> Acceso denegado</h3>
+            <p>Solo los administradores pueden acceder a esta página.</p>
+            <button class="btn btn-primary" @onclick="IrAInicio">
+                <i class="bi bi-house"></i> Ir al inicio
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-lg p-4 w-100 contenedor-usuarios"
+             style="max-width: 1200px; border-radius: 15px;">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="text-dark mb-0">
+                    <i class="bi bi-people"></i> Gestión de Usuarios
+                </h3>
+                <button class="btn btn-success"
+                        @onclick='() => Nav.NavigateTo("/usuarios/agregar")'>
+                    <i class="bi bi-plus-circle"></i> Agregar Usuario
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                </div>
+            }
+
+            @if (usuarios == null)
+            {
+                <p><i class="bi bi-hourglass-split"></i> Cargando...</p>
+            }
+            else if (!usuarios.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No se encontraron usuarios.
+                </div>
+            }
+            else
+            {
+                <!-- Tabla de usuarios -->
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>👤 Nombre</th>
+                            <th>📧 Email</th>
+                            <th>🔑 Rol</th>
+                            <th class="text-end">⚙️ Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in usuarios)
+                        {
+                            <tr>
+                                <td>@u.Nombre</td>
+                                <td>@u.Email</td>
+                                <td>@u.Rol</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-warning me-2"
+                                            @onclick='() => Nav.NavigateTo($"/usuarios/editar/{u.Id}")'>
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            @onclick="() => ConfirmarEliminar(u.Id, u.Nombre)">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+    <!-- Modal Eliminar -->
+    @if (mostrarModalEliminar)
+    {
+        <div class="modal fade show d-block" tabindex="-1"
+             style="background-color:rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-octagon"></i> Confirmar eliminación
+                        </h5>
+                        <button type="button" class="btn-close" @onclick="CancelarEliminar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Seguro que deseas eliminar al usuario <b>@nombreUsuarioEliminar</b>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CancelarEliminar">
+                            <i class="bi bi-arrow-left-circle"></i> Cancelar
+                        </button>
+                        <button class="btn btn-danger" @onclick="EliminarUsuarioConfirmado">
+                            <i class="bi bi-trash-fill"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Usuario>? usuarios;
+    private string errorMessage = "";
+
+    // Modal
+    private bool mostrarModalEliminar = false;
+    private int usuarioIdEliminar;
+    private string nombreUsuarioEliminar = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Sesion.EstaLogueado && Sesion.UsuarioActual?.Rol?.ToLower() == "admin")
+        {
+            await CargarUsuarios();
+        }
+    }
+
+    private async Task CargarUsuarios()
+    {
+        try
+        {
+            usuarios = await UsuarioService.ObtenerTodosAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al cargar usuarios: {ex.Message}";
+        }
+    }
+
+    private void ConfirmarEliminar(int id, string nombre)
+    {
+        usuarioIdEliminar = id;
+        nombreUsuarioEliminar = nombre;
+        mostrarModalEliminar = true;
+    }
+
+    private async Task EliminarUsuarioConfirmado()
+    {
+        try
+        {
+            await UsuarioService.EliminarAsync(usuarioIdEliminar);
+            mostrarModalEliminar = false;
+            await CargarUsuarios();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al eliminar usuario: {ex.Message}";
+        }
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarModalEliminar = false;
+    }
+
+    private void IrAInicio()
+    {
+        Nav.NavigateTo("/");
+    }
+}

@@ -1,0 +1,22 @@
+﻿@using FerreteriaStock.Services;
+<nav>
+    <ul>
+        <li><a href="/productos">Productos</a></li>
+        @if (Sesion.UsuarioActual?.Rol == "Admin")
+        {
+            <li><a href="/usuarios">Usuarios</a></li>
+        }
+        <li><button @onclick="CerrarSesion">Cerrar sesión</button></li>
+    </ul>
+</nav>
+
+@code {
+    [Inject] SesionUsuario Sesion { get; set; }
+    [Inject] NavigationManager Nav { get; set; }
+
+    void CerrarSesion()
+    {
+        Sesion.CerrarSesion();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

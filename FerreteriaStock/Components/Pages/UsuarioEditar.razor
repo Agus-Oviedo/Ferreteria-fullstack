@@ -1,0 +1,108 @@
+﻿@page "/usuarios/editar/{id:int}"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject UsuarioService UsuarioService
+@inject NavigationManager Nav
+
+<div class="d-flex justify-content-center align-items-center min-vh-100"
+     style="background: linear-gradient(to bottom, #0d47a1, #4a148c); padding:20px;">
+    <div class="card shadow-lg p-4 w-100" style="max-width: 500px; border-radius: 15px;">
+        <h3 class="text-center mb-4">
+            <i class="bi bi-pencil-square"></i> Editar Usuario
+        </h3>
+
+        @if (usuario == null)
+        {
+            <p><i class="bi bi-hourglass-split"></i> Cargando usuario...</p>
+        }
+        else
+        {
+            <EditForm Model="@usuario" OnValidSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <!-- Nombre -->
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <InputText @bind-Value="usuario.Nombre" class="form-control" placeholder="Nombre" />
+                </div>
+
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                    <InputText @bind-Value="usuario.UsuarioAcceso" placeholder="Usuario de acceso" class="form-control" />
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3 input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <InputText @bind-Value="usuario.Email" class="form-control" placeholder="Email" />
+                </div>
+
+
+                <!-- Botones -->
+                <button type="submit" class="btn btn-primary w-100 mb-2" disabled="@isLoading">
+                    @(isLoading ? "Guardando..." : "Guardar Cambios")
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100" @onclick="Volver">
+                    Cancelar
+                </button>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="text-danger text-center mt-3">@errorMessage</p>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private Usuario? usuario;
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var usuarios = await UsuarioService.ObtenerTodosAsync();
+            usuario = usuarios.FirstOrDefault(u => u.Id == id);
+
+            if (usuario == null)
+            {
+                errorMessage = "❌ Usuario no encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al cargar el usuario: {ex.Message}";
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (usuario == null) return;
+
+        try
+        {
+            isLoading = true;
+            await UsuarioService.EditarAsync(usuario);
+            Nav.NavigateTo("/usuarios");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"❌ Error al guardar cambios: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Volver()
+    {
+        Nav.NavigateTo("/usuarios");
+    }
+}

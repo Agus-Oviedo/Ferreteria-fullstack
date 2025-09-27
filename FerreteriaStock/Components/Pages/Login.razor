@@ -1,0 +1,81 @@
+﻿@page "/"
+@page "/login"
+@using FerreteriaStock.Services
+@using FerreteriaStock.Models
+@inject UsuarioService UsuarioService
+@inject SesionUsuario Sesion
+@inject NavigationManager Nav
+
+<!-- Fondo degradado y card centrada -->
+<div class="d-flex justify-content-center align-items-center vh-100" style="background: linear-gradient(to bottom, #0d47a1, #4a148c);">
+    <div class="card shadow-lg p-4" style="width: 380px; border-radius: 15px;">
+        <div class="text-center">
+            <!-- Icono de usuario -->
+            <i class="bi bi-person-circle" style="font-size: 4rem; color: #0d47a1;"></i>
+            <h4 class="mt-2">Ingresar</h4>
+        </div>
+
+        <EditForm Model="@loginModel" OnValidSubmit="IniciarSesion">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Email / Username -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <InputText @bind-Value="loginModel.Email" placeholder="Email" class="form-control" />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3 input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <InputText @bind-Value="loginModel.Clave" type="password" placeholder="Password" class="form-control" />
+            </div>
+
+
+            <!-- Botones -->
+            <button type="submit" class="btn btn-primary w-100 mb-2" disabled="@isLoading">
+                @(isLoading ? "Ingresando..." : "Login")
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100" @onclick="IrACrearCuenta">
+                Crear cuenta
+            </button>
+        </EditForm>
+
+        <!-- Error -->
+        @if (!string.IsNullOrEmpty(mensajeError))
+        {
+            <p class="text-danger text-center mt-3">@mensajeError</p>
+        }
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginModel = new();
+    private string mensajeError = "";
+    private bool isLoading = false;
+
+    private async Task IniciarSesion()
+    {
+        isLoading = true;
+        mensajeError = "";
+
+        var usuario = await UsuarioService.ValidarLoginAsync(loginModel.Email, loginModel.Clave);
+
+        if (usuario != null)
+        {
+            Sesion.IniciarSesion(usuario);
+            Nav.NavigateTo("/home");
+        }
+        else
+        {
+            mensajeError = "❌ Credenciales inválidas";
+        }
+
+        isLoading = false;
+    }
+
+    private void IrACrearCuenta()
+    {
+        Nav.NavigateTo("/registro"); // 👈 crea una página Registro.razor
+    }
+}
